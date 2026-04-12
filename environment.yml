@@ -1,0 +1,19 @@
+name: postgis-park-access 
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pandas
+  - geopandas
+  - sqlalchemy
+  - psycopg
+  - streamlit
+  - shapely
+  - pyogrio
+  - fiona
+  - matplotlib
+  - pip
+  - pip:
+      - folium
+      - streamlit-folium
+      - python-dotenv

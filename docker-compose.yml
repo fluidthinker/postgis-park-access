@@ -1,0 +1,28 @@
+services:
+  postgis:
+    image: postgis/postgis:16-3.4
+    container_name: flood_exposure_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: flood_exposure
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: flood_exposure_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: chris@example.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgis
+
+volumes:
+  postgis_data:
