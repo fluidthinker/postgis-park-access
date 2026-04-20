@@ -155,6 +155,11 @@ def clean_acs_data(df: pd.DataFrame) -> pd.DataFrame:
     numeric_columns = list(ACS_VARIABLES.values())
     for col in numeric_columns:
         df[col] = pd.to_numeric(df[col], errors="coerce")
+        # Replace Census sentinel values with NaN
+        df[col] = df[col].replace({
+            -666666666: pd.NA,
+            -999999999: pd.NA
+    })
 
     # Derived field: percent renter occupied.
     # We guard against divide-by-zero.
