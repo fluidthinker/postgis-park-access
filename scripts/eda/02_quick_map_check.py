@@ -18,9 +18,7 @@ def main():
     acs = pd.read_csv(acs_path, dtype={"geoid": str})
 
     merged = tracts.merge(acs, on="geoid")
-    print(merged["med_income"].describe())
-    print(merged["med_income"].sort_values().head())
-    print(merged["med_income"].sort_values().tail())
+   
     # --- simple plot ---
     fig, ax = plt.subplots(figsize=(8, 8))
 
@@ -31,6 +29,10 @@ def main():
         ax=ax,
         edgecolor="black",
         linewidth=0.2
+        missing_kwds = { 
+        "color": "lightgrey",
+        "label": "No population / no data"
+        }
     )
 
     ax.set_title("Dane County Median Income by Census Tract")
