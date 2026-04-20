@@ -50,7 +50,7 @@ def get_project_root() -> Path:
     Path
         Absolute path to the repository root.
     """
-    return Path(__file__).resolve().parents[1]
+    return Path(__file__).resolve().parents[2]
 
 
 def fetch_dane_county_tracts() -> gpd.GeoDataFrame:
