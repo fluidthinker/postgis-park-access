@@ -28,7 +28,7 @@ def main():
         legend=True,
         ax=ax,
         edgecolor="black",
-        linewidth=0.2
+        linewidth=0.2,
         missing_kwds = { 
         "color": "lightgrey",
         "label": "No population / no data"
