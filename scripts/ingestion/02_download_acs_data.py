@@ -113,7 +113,23 @@ def fetch_acs_data() -> pd.DataFrame:
         If the API returns an unexpected payload.
     """
     params = build_request_params()
+    '''
+    Why use a session?
 
+    A session can:
+
+    reuse connections
+    keep shared settings
+    make repeated requests cleaner
+
+    For this script, the benefit is mostly:
+
+    slightly cleaner style
+    a bit more production-minded
+
+    It is not absolutely required here, but it is a good habit.
+
+    '''
     with requests.Session() as session:
         response = session.get(ACS_URL, params=params, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
