@@ -12,6 +12,7 @@ dependencies:
   - pyogrio
   - fiona
   - matplotlib
+  - ipykernel
   - pip
   - pip:
       - folium
