@@ -133,3 +133,16 @@ output_path = output_dir / OUTPUT_FILENAME
 parks_clean.to_file(output_path, driver="GeoJSON")
 
 print(f"Saved to: {output_path}")
+# %%
+# %%
+len(parks_poly)
+# %%
+# %%
+parks_poly["leisure"].value_counts(dropna=False)
+# %%
+# %%
+parks_poly[["name", "leisure"]].sample(20, random_state=42)
+# %%
+# %%
+parks_poly["name"].isna().sum()
+# %%
