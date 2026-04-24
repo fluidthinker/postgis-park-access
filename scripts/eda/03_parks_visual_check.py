@@ -20,14 +20,17 @@ parks_web = parks.to_crs(epsg=3857)
 
 # %%
 # Plot with ESRI imagery
+# %%
 ax = parks_web.plot(
     figsize=(10, 10),
-    alpha=0.5,
-    edgecolor="black",
-    linewidth=0.2
+    facecolor="none",     # 👈 KEY CHANGE
+    edgecolor="red",
+    linewidth=0.5
 )
 
+import contextily as cx
 cx.add_basemap(ax, source=cx.providers.Esri.WorldImagery)
 
-ax.set_title("OSM Parks over ESRI Imagery")
+ax.set_title("OSM Parks (Outline) over Imagery")
 ax.set_axis_off()
+
