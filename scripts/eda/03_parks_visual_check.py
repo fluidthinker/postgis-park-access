@@ -18,7 +18,7 @@ parks.head()
 # Reproject for basemap
 parks_web = parks.to_crs(epsg=3857)
 
-# %%
+
 # Plot with ESRI imagery
 # %%
 ax = parks_web.plot(
