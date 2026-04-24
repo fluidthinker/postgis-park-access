@@ -14,6 +14,7 @@ dependencies:
   - matplotlib
   - ipykernel
   - osmnx
+  - contextily 
   - pip
   - pip:
       - folium
