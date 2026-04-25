@@ -17,6 +17,33 @@ Input files:
 
 Output file:
 - data/processed/census/dane_county_tracts_acs_2024.geojson
+
+----------------------------------------------------------------------
+⚠️ IMPORTANT: PROJ / GDAL ENVIRONMENT SETUP (WSL / micromamba)
+----------------------------------------------------------------------
+
+If you see an error like:
+
+    PROJ: proj_create_from_database: Open of .../share/proj failed
+
+This means the PROJ data directory is not set correctly.
+
+Before running this script, run:
+
+    micromamba activate postgis-park-access
+
+    export PROJ_DATA=/home/chris/micromamba/envs/postgis-park-access/share/proj
+
+Then run:
+
+    python scripts/ingestion/04_prepare_census_data.py
+
+This ensures CRS transformations and GeoJSON writing work correctly.
+
+
+
+
+
 """
 
 # %%
@@ -291,8 +318,11 @@ def main() -> None:
 
     print("\nDone.")
     print(f"Prepared census file saved at: {output_path}")
+    print("\nSample of prepared census data:")
+    print(prepared_gdf.head())
 
 
 # %%
 if __name__ == "__main__":
     main()
+# %%
