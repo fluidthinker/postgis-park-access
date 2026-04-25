@@ -1,22 +1,41 @@
-name: postgis-park-access 
+name: postgis-park-access
 channels:
   - conda-forge
+
 dependencies:
+  # Core Python
   - python=3.11
-  - pandas
-  - geopandas
-  - sqlalchemy
-  - psycopg
-  - streamlit
-  - shapely
-  - pyogrio
-  - fiona
-  - matplotlib
-  - ipykernel
-  - osmnx
-  - contextily 
+
+  # Data manipulation
+  - pandas          # tabular data (DataFrames)
+
+  # Geospatial stack
+  - geopandas       # spatial DataFrames (geometry + pandas)
+  - shapely         # geometry operations (buffer, intersection, etc.)
+  - pyogrio         # fast file I/O for geospatial data
+  - fiona           # alternative geospatial file I/O backend
+
+  # Database / PostGIS
+  - sqlalchemy      # database engine + connection manager
+  - psycopg         # PostgreSQL driver (actual DB communication)
+  - geoalchemy2     # spatial support for SQLAlchemy (PostGIS geometry types)
+
+  # Visualization
+  - matplotlib      # static plotting
+  - contextily      # basemap tiles (ESRI, OSM imagery)
+
+  # OSM data
+  - osmnx           # download and work with OpenStreetMap data
+
+  # App layer (optional for later)
+  - streamlit       # simple web apps
+
+  # Dev / workflow
+  - ipykernel       # allows VS Code / Jupyter cell execution
+
+  # Pip packages
   - pip
   - pip:
-      - folium
-      - streamlit-folium
-      - python-dotenv
+      - folium              # interactive web maps (Leaflet)
+      - streamlit-folium    # embed folium maps in Streamlit
+      - python-dotenv       # manage environment variables (DB creds, API keys)
