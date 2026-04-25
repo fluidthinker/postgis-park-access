@@ -31,6 +31,8 @@ tracts_web = tracts.to_crs(epsg=3857)
 
 # %% 
 parks.head()
+
+
 # %%
 fig, ax = plt.subplots(figsize=(12, 10))
 
