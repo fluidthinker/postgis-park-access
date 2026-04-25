@@ -329,7 +329,7 @@ def main() -> None:
     parks_gdf = load_parks_data(project_root)
 
     parks_gdf = load_parks_data(get_project_root())     
-    print(parks_gdf.columns.tolist())
+   
 
 
 
