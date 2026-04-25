@@ -59,7 +59,7 @@ PARKS_FILENAME = "dane_county_parks_osm.geojson"
 CENSUS_TABLE = "census_tracts_enriched"
 PARKS_TABLE = "parks_osm"
 
-DB_NAME = "parks"
+DB_NAME = "park_access"
 DB_USER = "postgres"
 DB_PASSWORD = "postgres"
 DB_HOST = "localhost"
