@@ -4,39 +4,19 @@
 
 Load prepared census and parks data into PostGIS.
 
-This script:
-1. Reads processed census tract + ACS GeoJSON.
-2. Reads prepared OSM parks GeoJSON.
-3. Connects to PostgreSQL/PostGIS using SQLAlchemy.
-4. Writes both GeoDataFrames to PostGIS tables.
-5. Runs basic SQL validation checks.
-
-----------------------------------------------------------------------
-IMPORTANT: PROJ / GDAL ENVIRONMENT SETUP
-----------------------------------------------------------------------
-
-If you see an error like:
-
-    PROJ: proj_create_from_database: Open of .../share/proj failed
-
-Run this before executing the script:
+Run from repo root:
 
     micromamba activate postgis-park-access
     export PROJ_DATA=$(python -c "import pyproj; print(pyproj.datadir.get_data_dir())")
+    python scripts/ingestion/05_load_to_postgis.py
 
-Then run:
-
-    python scripts/analysis/05_load_to_postgis.py
-
-----------------------------------------------------------------------
-Expected input files:
-- data/processed/census/dane_county_tracts_acs_2024.geojson
-- data/raw/parks/dane_county_parks_osm.geojson
-
-PostGIS output tables:
-- public.census_tracts_enriched
-- public.parks_osm
-----------------------------------------------------------------------
+This script:
+1. Reads prepared census tract + ACS GeoJSON.
+2. Reads prepared OSM parks GeoJSON.
+3. Connects to PostgreSQL/PostGIS using SQLAlchemy.
+4. Replaces existing PostGIS tables with fresh loaded data.
+5. Creates spatial and attribute indexes.
+6. Runs basic PostGIS validation checks.
 """
 
 # %%
@@ -46,33 +26,20 @@ from pathlib import Path
 
 import geopandas as gpd
 from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
 
 
 # %%
-# Configuration
+# ---------------------------------------------------------------------
+# Project paths
+# ---------------------------------------------------------------------
 
-ACS_YEAR = "2024"
-
-CENSUS_FILENAME = f"dane_county_tracts_acs_{ACS_YEAR}.geojson"
-PARKS_FILENAME = "dane_county_parks_osm.geojson"
-
-CENSUS_TABLE = "census_tracts_enriched"
-PARKS_TABLE = "parks_osm"
-
-DB_NAME = "park_access"
-DB_USER = "postgres"
-DB_PASSWORD = "postgres"
-DB_HOST = "localhost"
-DB_PORT = "5432"
-
-
-# %%
 def get_project_root() -> Path:
     """
     Return the repository root.
 
     Assumes this file lives in:
-        <repo_root>/scripts/analysis/05_load_to_postgis.py
+        <repo_root>/scripts/ingestion/05_load_to_postgis.py
 
     Returns
     -------
@@ -82,10 +49,66 @@ def get_project_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+PROJECT_ROOT = get_project_root()
+
+ACS_YEAR = "2024"
+
+CENSUS_PATH = (
+    PROJECT_ROOT
+    / "data"
+    / "processed"
+    / "census"
+    / f"dane_county_tracts_acs_{ACS_YEAR}.geojson"
+)
+
+PARKS_PATH = (
+    PROJECT_ROOT
+    / "data"
+    / "raw"
+    / "parks"
+    / "dane_county_parks_osm.geojson"
+)
+
+
 # %%
-def build_database_url() -> str:
+# ---------------------------------------------------------------------
+# Database configuration
+# ---------------------------------------------------------------------
+
+DB_NAME = "park_access"
+DB_USER = "postgres"
+DB_PASSWORD = "postgres"
+DB_HOST = "localhost"
+DB_PORT = "5432"
+
+CENSUS_TABLE = "census_tracts_enriched"
+PARKS_TABLE = "parks_osm"
+DB_SCHEMA = "public"
+
+
+# %%
+def build_database_url(
+    db_user: str,
+    db_password: str,
+    db_host: str,
+    db_port: str,
+    db_name: str,
+) -> str:
     """
-    Build a SQLAlchemy database URL for PostgreSQL.
+    Build a SQLAlchemy database URL for PostgreSQL/PostGIS.
+
+    Parameters
+    ----------
+    db_user : str
+        PostgreSQL username.
+    db_password : str
+        PostgreSQL password.
+    db_host : str
+        Database host.
+    db_port : str
+        Database port.
+    db_name : str
+        Database name.
 
     Returns
     -------
@@ -93,41 +116,34 @@ def build_database_url() -> str:
         SQLAlchemy connection URL.
     """
     return (
-        f"postgresql+psycopg://{DB_USER}:{DB_PASSWORD}"
-        f"@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        f"postgresql+psycopg://{db_user}:{db_password}"
+        f"@{db_host}:{db_port}/{db_name}"
     )
 
 
 # %%
-def load_census_data(project_root: Path) -> gpd.GeoDataFrame:
+def load_geodata(project_path: Path, dataset_name: str) -> gpd.GeoDataFrame:
     """
-    Load prepared census tract + ACS data.
+    Load a GeoJSON file as a GeoDataFrame and ensure EPSG:4326.
 
     Parameters
     ----------
-    project_root : Path
-        Repository root.
+    project_path : Path
+        Path to the GeoJSON file.
+    dataset_name : str
+        Human-readable dataset name for logging.
 
     Returns
     -------
     gpd.GeoDataFrame
-        Prepared census GeoDataFrame.
+        Loaded GeoDataFrame in EPSG:4326.
     """
-    census_path = (
-        project_root
-        / "data"
-        / "processed"
-        / "census"
-        / CENSUS_FILENAME
-    )
+    print(f"Loading {dataset_name} data from: {project_path}")
 
-    print(f"Loading census data from: {census_path}")
+    gdf = gpd.read_file(project_path)
 
-    gdf = gpd.read_file(census_path)
-
-    # Ensure CRS is defined and standardized.
     if gdf.crs is None:
-        raise ValueError("Census GeoDataFrame has no CRS.")
+        raise ValueError(f"{dataset_name} GeoDataFrame has no CRS.")
 
     if gdf.crs.to_string() != "EPSG:4326":
         gdf = gdf.to_crs("EPSG:4326")
@@ -136,53 +152,19 @@ def load_census_data(project_root: Path) -> gpd.GeoDataFrame:
 
 
 # %%
-def load_parks_data(project_root: Path) -> gpd.GeoDataFrame:
+def validate_before_load(
+    census_gdf: gpd.GeoDataFrame,
+    parks_gdf: gpd.GeoDataFrame,
+) -> None:
     """
-    Load prepared OSM parks data.
-
-    Parameters
-    ----------
-    project_root : Path
-        Repository root.
-
-    Returns
-    -------
-    gpd.GeoDataFrame
-        Prepared parks GeoDataFrame.
-    """
-    parks_path = (
-        project_root
-        / "data"
-        / "raw"
-        / "parks"
-        / PARKS_FILENAME
-    )
-
-    print(f"Loading parks data from: {parks_path}")
-
-    gdf = gpd.read_file(parks_path)
-
-    # Ensure CRS is defined and standardized.
-    if gdf.crs is None:
-        raise ValueError("Parks GeoDataFrame has no CRS.")
-
-    if gdf.crs.to_string() != "EPSG:4326":
-        gdf = gdf.to_crs("EPSG:4326")
-
-    return gdf
-
-
-# %%
-def validate_before_load(census_gdf: gpd.GeoDataFrame, parks_gdf: gpd.GeoDataFrame) -> None:
-    """
-    Print quick checks before loading data to PostGIS.
+    Print pre-load validation checks.
 
     Parameters
     ----------
     census_gdf : gpd.GeoDataFrame
-        Prepared census data.
+        Prepared census tract data.
     parks_gdf : gpd.GeoDataFrame
-        Prepared parks data.
+        Prepared OSM parks data.
     """
     print("\n--- PRE-LOAD CHECKS ---")
 
@@ -196,6 +178,10 @@ def validate_before_load(census_gdf: gpd.GeoDataFrame, parks_gdf: gpd.GeoDataFra
     print("\nParks:")
     print(f"Rows: {len(parks_gdf)}")
     print(f"CRS: {parks_gdf.crs}")
+
+    if "park_id" not in parks_gdf.columns:
+        raise KeyError("parks_gdf is missing required column: park_id")
+
     print(f"Duplicate park_id: {parks_gdf['park_id'].duplicated().sum()}")
     print(f"Null geometries: {parks_gdf.geometry.isna().sum()}")
     print(f"Invalid geometries: {(~parks_gdf.geometry.is_valid).sum()}")
@@ -205,14 +191,14 @@ def validate_before_load(census_gdf: gpd.GeoDataFrame, parks_gdf: gpd.GeoDataFra
 
 
 # %%
-def create_postgis_extension(engine) -> None:
+def create_postgis_extension(engine: Engine) -> None:
     """
-    Ensure the PostGIS extension exists in the target database.
+    Ensure PostGIS extension exists.
 
     Parameters
     ----------
-    engine
-        SQLAlchemy engine.
+    engine : Engine
+        SQLAlchemy database engine.
     """
     print("\nEnsuring PostGIS extension exists...")
 
@@ -224,7 +210,8 @@ def create_postgis_extension(engine) -> None:
 def load_geodataframe_to_postgis(
     gdf: gpd.GeoDataFrame,
     table_name: str,
-    engine,
+    engine: Engine,
+    schema: str,
 ) -> None:
     """
     Load a GeoDataFrame to PostGIS.
@@ -234,49 +221,67 @@ def load_geodataframe_to_postgis(
     gdf : gpd.GeoDataFrame
         GeoDataFrame to load.
     table_name : str
-        Destination PostGIS table name.
-    engine
-        SQLAlchemy engine.
+        Destination table name.
+    engine : Engine
+        SQLAlchemy database engine.
+    schema : str
+        Destination schema.
+
+    Notes
+    -----
+    if_exists="replace" means rerunning this script replaces the table.
+    It does not append duplicate rows.
     """
-    print(f"\nLoading table: {table_name}")
+    print(f"\nLoading table: {schema}.{table_name}")
 
     gdf.to_postgis(
         name=table_name,
         con=engine,
-        schema="public",
+        schema=schema,
         if_exists="replace",
         index=False,
     )
 
-    print(f"Loaded table: {table_name}")
+    print(f"Loaded table: {schema}.{table_name}")
 
 
 # %%
-def create_spatial_indexes(engine) -> None:
+def create_spatial_indexes(
+    engine: Engine,
+    census_table: str,
+    parks_table: str,
+    schema: str,
+) -> None:
     """
-    Create spatial indexes and useful attribute indexes.
+    Create spatial and attribute indexes.
 
     Parameters
     ----------
-    engine
-        SQLAlchemy engine.
+    engine : Engine
+        SQLAlchemy database engine.
+    census_table : str
+        Census table name.
+    parks_table : str
+        Parks table name.
+    schema : str
+        Database schema.
     """
     print("\nCreating indexes...")
 
     sql = f"""
-    CREATE INDEX IF NOT EXISTS idx_{CENSUS_TABLE}_geometry
-    ON public.{CENSUS_TABLE}
+    CREATE INDEX IF NOT EXISTS idx_{census_table}_geometry
+    ON {schema}.{census_table}
     USING GIST (geometry);
 
-    CREATE INDEX IF NOT EXISTS idx_{PARKS_TABLE}_geometry
-    ON public.{PARKS_TABLE}
+    CREATE INDEX IF NOT EXISTS idx_{parks_table}_geometry
+    ON {schema}.{parks_table}
     USING GIST (geometry);
 
-    CREATE INDEX IF NOT EXISTS idx_{CENSUS_TABLE}_geoid
-    ON public.{CENSUS_TABLE} (geoid);
+    CREATE INDEX IF NOT EXISTS idx_{census_table}_geoid
+    ON {schema}.{census_table} (geoid);
 
-    CREATE INDEX IF NOT EXISTS idx_{PARKS_TABLE}_park_id
-    ON public.{PARKS_TABLE} (park_id);
+    CREATE INDEX IF NOT EXISTS idx_{parks_table}_park_id
+    ON {schema}.{parks_table} (park_id);
     """
 
     with engine.begin() as conn:
@@ -286,28 +291,39 @@ def create_spatial_indexes(engine) -> None:
 
 
 # %%
-def validate_postgis_load(engine) -> None:
+def validate_postgis_load(
+    engine: Engine,
+    census_table: str,
+    parks_table: str,
+    schema: str,
+) -> None:
     """
     Run basic validation checks inside PostGIS.
 
     Parameters
     ----------
-    engine
-        SQLAlchemy engine.
+    engine : Engine
+        SQLAlchemy database engine.
+    census_table : str
+        Census table name.
+    parks_table : str
+        Parks table name.
+    schema : str
+        Database schema.
     """
     print("\n--- POSTGIS LOAD CHECKS ---")
 
     queries = {
-        "census row count": f"SELECT COUNT(*) FROM public.{CENSUS_TABLE};",
-        "parks row count": f"SELECT COUNT(*) FROM public.{PARKS_TABLE};",
-        "census SRID": f"SELECT DISTINCT ST_SRID(geometry) FROM public.{CENSUS_TABLE};",
-        "parks SRID": f"SELECT DISTINCT ST_SRID(geometry) FROM public.{PARKS_TABLE};",
+        "census row count": f"SELECT COUNT(*) FROM {schema}.{census_table};",
+        "parks row count": f"SELECT COUNT(*) FROM {schema}.{parks_table};",
+        "census SRID": f"SELECT DISTINCT ST_SRID(geometry) FROM {schema}.{census_table};",
+        "parks SRID": f"SELECT DISTINCT ST_SRID(geometry) FROM {schema}.{parks_table};",
         "usable census tracts": (
-            f"SELECT COUNT(*) FROM public.{CENSUS_TABLE} "
+            f"SELECT COUNT(*) FROM {schema}.{census_table} "
             f"WHERE tract_data_status = 'usable';"
         ),
         "zero population tracts": (
-            f"SELECT COUNT(*) FROM public.{CENSUS_TABLE} "
+            f"SELECT COUNT(*) FROM {schema}.{census_table} "
             f"WHERE tract_data_status = 'zero_population';"
         ),
     }
@@ -323,21 +339,19 @@ def main() -> None:
     """
     Run the PostGIS loading workflow.
     """
-    project_root = get_project_root()
-
-    census_gdf = load_census_data(project_root)
-    parks_gdf = load_parks_data(project_root)
-
-    parks_gdf = load_parks_data(get_project_root())     
-   
-
-
-
-
+    census_gdf = load_geodata(CENSUS_PATH, dataset_name="census")
+    parks_gdf = load_geodata(PARKS_PATH, dataset_name="parks")
 
     validate_before_load(census_gdf, parks_gdf)
 
-    database_url = build_database_url()
+    database_url = build_database_url(
+        db_user=DB_USER,
+        db_password=DB_PASSWORD,
+        db_host=DB_HOST,
+        db_port=DB_PORT,
+        db_name=DB_NAME,
+    )
+
     engine = create_engine(database_url)
 
     create_postgis_extension(engine)
@@ -346,16 +360,29 @@ def main() -> None:
         gdf=census_gdf,
         table_name=CENSUS_TABLE,
         engine=engine,
+        schema=DB_SCHEMA,
     )
 
     load_geodataframe_to_postgis(
         gdf=parks_gdf,
         table_name=PARKS_TABLE,
         engine=engine,
+        schema=DB_SCHEMA,
     )
 
-    create_spatial_indexes(engine)
-    validate_postgis_load(engine)
+    create_spatial_indexes(
+        engine=engine,
+        census_table=CENSUS_TABLE,
+        parks_table=PARKS_TABLE,
+        schema=DB_SCHEMA,
+    )
+
+    validate_postgis_load(
+        engine=engine,
+        census_table=CENSUS_TABLE,
+        parks_table=PARKS_TABLE,
+        schema=DB_SCHEMA,
+    )
 
     print("\nDone loading data to PostGIS.")
 
@@ -363,4 +390,3 @@ def main() -> None:
 # %%
 if __name__ == "__main__":
     main()
-# %%
