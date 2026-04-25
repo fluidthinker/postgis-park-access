@@ -328,6 +328,13 @@ def main() -> None:
     census_gdf = load_census_data(project_root)
     parks_gdf = load_parks_data(project_root)
 
+    parks_gdf = load_parks_data(get_project_root())     
+    print(parks_gdf.columns.tolist())
+
+
+
+
+
     validate_before_load(census_gdf, parks_gdf)
 
     database_url = build_database_url()
@@ -356,3 +363,4 @@ def main() -> None:
 # %%
 if __name__ == "__main__":
     main()
+# %%
