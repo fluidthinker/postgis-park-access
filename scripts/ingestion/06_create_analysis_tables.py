@@ -165,18 +165,22 @@ def create_analysis_table(
         FROM {schema}.{census_table}
         WHERE has_population = true
     ),
-
     park_intersections AS (
         SELECT
-            t.geoid,
-            p.park_id,
-            ST_Area(
-                ST_Intersection(t.geometry, p.geometry)::geography
-            ) AS park_area_sqm
-        FROM usable_tracts t
-        JOIN {schema}.{parks_table} p
-            ON ST_Intersects(t.geometry, p.geometry)
-        WHERE NOT ST_IsEmpty(ST_Intersection(t.geometry, p.geometry))
+            geoid,
+            park_id,
+            ST_Area(intersection_geom::geography) AS park_area_sqm
+        FROM (
+            SELECT
+                t.geoid,
+                p.park_id,
+                ST_Intersection(t.geometry, p.geometry) AS intersection_geom
+            FROM usable_tracts t
+            JOIN public.parks_osm p
+                ON ST_Intersects(t.geometry, p.geometry)
+        ) intersections
+        WHERE NOT ST_IsEmpty(intersection_geom)
+        AND ST_Area(intersection_geom::geography) > 0
     ),
 
     park_area_by_tract AS (
@@ -187,7 +191,6 @@ def create_analysis_table(
         FROM park_intersections
         GROUP BY geoid
     ),
-
     nearest_park AS (
         SELECT
             t.geoid,
@@ -197,18 +200,17 @@ def create_analysis_table(
                 ST_Centroid(t.geometry)::geography,
                 nearest.geometry::geography
             ) AS nearest_park_distance_m
-        FROM usable_tracts t
-        LEFT JOIN LATERAL (
-            SELECT
+            FROM usable_tracts t
+            LEFT JOIN LATERAL (
+                SELECT
                 p.park_id,
                 p.name,
                 p.geometry
-            FROM {schema}.{parks_table} p
-            ORDER BY t.geometry <-> p.geometry
+            FROM public.parks_osm p
+            ORDER BY ST_Centroid(t.geometry) <-> p.geometry
             LIMIT 1
-        ) nearest ON true
-    ),
-
+            ) nearest ON true
+    ), 
     metrics AS (
         SELECT
             t.geoid,
@@ -417,3 +419,4 @@ def main() -> None:
 # %%
 if __name__ == "__main__":
     main()
+# %%
