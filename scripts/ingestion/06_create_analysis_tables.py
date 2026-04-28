@@ -364,6 +364,15 @@ def validate_analysis_table(
             GROUP BY access_tier
             ORDER BY access_tier;
         """,
+        "income spread by access tier": f"""
+            SELECT
+                access_tier,
+                MIN(med_income) AS min_income,
+                MAX(med_income) AS max_income
+            FROM {schema}.{analysis_table}
+            GROUP BY access_tier
+            ORDER BY access_tier;
+        """
     }
 
     with engine.connect() as conn:
