@@ -305,8 +305,8 @@ def create_analysis_indexes(
         conn.execute(text(sql))
 
     print("Analysis indexes created.")
-    
-% ##
+
+# %%
 def validate_analysis_table(
     engine: Engine,
     schema: str,
