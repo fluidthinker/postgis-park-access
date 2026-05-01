@@ -305,16 +305,18 @@ def create_analysis_indexes(
         conn.execute(text(sql))
 
     print("Analysis indexes created.")
-
-
-# %%
+% ##
 def validate_analysis_table(
     engine: Engine,
     schema: str,
     analysis_table: str,
 ) -> None:
     """
-    Run validation checks on the analysis table.
+    Run validation and summary checks on the analysis table.
+
+    These checks help evaluate whether the current access-tier thresholds
+    are reasonable and provide percentile values that can be used to tune
+    the thresholds in the script.
 
     Parameters
     ----------
@@ -332,26 +334,46 @@ def validate_analysis_table(
             SELECT COUNT(*)
             FROM {schema}.{analysis_table};
         """,
+
         "access tier counts": f"""
             SELECT access_tier, COUNT(*)
             FROM {schema}.{analysis_table}
             GROUP BY access_tier
             ORDER BY access_tier;
         """,
+
         "park area per capita summary": f"""
             SELECT
-                MIN(park_sqm_per_capita),
-                AVG(park_sqm_per_capita),
-                MAX(park_sqm_per_capita)
+                MIN(park_sqm_per_capita) AS min_park_sqm_per_capita,
+                AVG(park_sqm_per_capita) AS avg_park_sqm_per_capita,
+                MAX(park_sqm_per_capita) AS max_park_sqm_per_capita
             FROM {schema}.{analysis_table};
         """,
+
+        "park area per capita percentiles": f"""
+            SELECT
+                percentile_cont(0.25) WITHIN GROUP (ORDER BY park_sqm_per_capita) AS p25,
+                percentile_cont(0.50) WITHIN GROUP (ORDER BY park_sqm_per_capita) AS p50,
+                percentile_cont(0.75) WITHIN GROUP (ORDER BY park_sqm_per_capita) AS p75
+            FROM {schema}.{analysis_table};
+        """,
+
         "nearest park distance summary": f"""
             SELECT
-                MIN(nearest_park_distance_m),
-                AVG(nearest_park_distance_m),
-                MAX(nearest_park_distance_m)
+                MIN(nearest_park_distance_m) AS min_nearest_park_distance_m,
+                AVG(nearest_park_distance_m) AS avg_nearest_park_distance_m,
+                MAX(nearest_park_distance_m) AS max_nearest_park_distance_m
             FROM {schema}.{analysis_table};
         """,
+
+        "nearest park distance percentiles": f"""
+            SELECT
+                percentile_cont(0.25) WITHIN GROUP (ORDER BY nearest_park_distance_m) AS p25,
+                percentile_cont(0.50) WITHIN GROUP (ORDER BY nearest_park_distance_m) AS p50,
+                percentile_cont(0.75) WITHIN GROUP (ORDER BY nearest_park_distance_m) AS p75
+            FROM {schema}.{analysis_table};
+        """,
+
         "income by access tier": f"""
             SELECT
                 access_tier,
@@ -364,15 +386,32 @@ def validate_analysis_table(
             GROUP BY access_tier
             ORDER BY access_tier;
         """,
+
         "income spread by access tier": f"""
             SELECT
                 access_tier,
                 MIN(med_income) AS min_income,
+                percentile_cont(0.25) WITHIN GROUP (ORDER BY med_income) AS p25_income,
+                percentile_cont(0.50) WITHIN GROUP (ORDER BY med_income) AS median_income,
+                percentile_cont(0.75) WITHIN GROUP (ORDER BY med_income) AS p75_income,
                 MAX(med_income) AS max_income
             FROM {schema}.{analysis_table}
             GROUP BY access_tier
             ORDER BY access_tier;
-        """
+        """,
+
+        "renter spread by access tier": f"""
+            SELECT
+                access_tier,
+                MIN(pct_renter) AS min_pct_renter,
+                percentile_cont(0.25) WITHIN GROUP (ORDER BY pct_renter) AS p25_pct_renter,
+                percentile_cont(0.50) WITHIN GROUP (ORDER BY pct_renter) AS median_pct_renter,
+                percentile_cont(0.75) WITHIN GROUP (ORDER BY pct_renter) AS p75_pct_renter,
+                MAX(pct_renter) AS max_pct_renter
+            FROM {schema}.{analysis_table}
+            GROUP BY access_tier
+            ORDER BY access_tier;
+        """,
     }
 
     with engine.connect() as conn:
