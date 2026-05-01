@@ -20,6 +20,9 @@ dependencies:
   - psycopg         # PostgreSQL driver (actual DB communication)
   - geoalchemy2     # spatial support for SQLAlchemy (PostGIS geometry types)
 
+  # Analytics / Query engine
+  - duckdb          # in-process analytical database (query Parquet, fast SQL)
+
   # Visualization
   - matplotlib      # static plotting
   - contextily      # basemap tiles (ESRI, OSM imagery)
