@@ -1,10 +1,29 @@
 # %%
+from pathlib import Path
+
 import duckdb
 
-PARQUET_PATH = "data/processed/analysis/tract_park_access.parquet"
 
 # %%
-# Basic load
+def get_project_root() -> Path:
+    """
+    Return repo root.
+
+    Assumes this file lives in:
+        <repo_root>/scripts/eda/04_duckdb_exploration.py
+    """
+    return Path(__file__).resolve().parents[2]
+
+
+PROJECT_ROOT = get_project_root()
+
+PARQUET_PATH = PROJECT_ROOT / "data" / "processed" / "analysis" / "tract_park_access.parquet"
+
+print(PARQUET_PATH)
+print("Exists:", PARQUET_PATH.exists())
+
+
+# %%
 df = duckdb.query(f"""
     SELECT *
     FROM '{PARQUET_PATH}'
@@ -14,8 +33,8 @@ print("Rows:", len(df))
 print("\nColumns:")
 print(df.columns.tolist())
 
+
 # %%
-# Access tier summary
 df_access = duckdb.query(f"""
     SELECT
         access_tier,
@@ -27,18 +46,4 @@ df_access = duckdb.query(f"""
     ORDER BY access_tier
 """).to_df()
 
-print("\nAccess Tier Summary:")
 print(df_access)
-
-# %%
-# Income vs park access
-df_income = duckdb.query(f"""
-    SELECT
-        med_income,
-        park_sqm_per_capita,
-        nearest_park_distance_m
-    FROM '{PARQUET_PATH}'
-""").to_df()
-
-print("\nSample income vs access:")
-print(df_income.head())
