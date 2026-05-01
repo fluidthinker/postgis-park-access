@@ -61,14 +61,34 @@ ANALYSIS_TABLE = "tract_park_access"
 # ---------------------------------------------------------------------
 # Analysis thresholds
 # ---------------------------------------------------------------------
-# These are first-pass, interpretable thresholds.
-# You can tune them later after inspecting the distribution.
+# These thresholds are DATA-DRIVEN and based on the distribution of the
+# analysis table (tract_park_access).
+#
+# Specifically:
+# - Availability thresholds (park_sqm_per_capita) use the 25th and 75th percentiles
+# - Proximity thresholds (nearest_park_distance_m) use the 25th and 75th percentiles
+#
+# Interpretation:
+# - Bottom 25% → low availability / far from parks
+# - Top 25% → high availability / close to parks
+#
+# This approach ensures:
+# - Balanced classification across tracts
+# - Comparability within the study area
+# - Avoidance of arbitrary threshold selection
+#
+# NOTE:
+# These thresholds are relative to Dane County and may change
+# if applied to a different geography or time period.
+#
+# Alternative approaches could include:
+# - Policy-based thresholds (e.g., WHO green space standards)
+# - Fixed domain thresholds (less adaptive)
+LOW_PARK_SQM_PER_CAPITA = 23
+HIGH_PARK_SQM_PER_CAPITA = 111
 
-LOW_PARK_SQM_PER_CAPITA = 10
-HIGH_PARK_SQM_PER_CAPITA = 30
-
-NEAR_PARK_DISTANCE_M = 800
-FAR_PARK_DISTANCE_M = 1600
+NEAR_PARK_DISTANCE_M = 107
+FAR_PARK_DISTANCE_M = 457
 
 
 # %%
