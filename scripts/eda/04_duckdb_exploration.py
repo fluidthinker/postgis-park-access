@@ -47,3 +47,4 @@ df_access = duckdb.query(f"""
 """).to_df()
 
 print(df_access)
+# %%
