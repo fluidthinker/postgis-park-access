@@ -144,8 +144,13 @@ def export_to_parquet(gdf: gpd.GeoDataFrame, output_path: Path) -> None:
     """
     print(f"Exporting to Parquet: {output_path}")
 
-    gdf.to_parquet(output_path)
-
+  
+    gdf.to_parquet(
+        output_path,
+        engine="pyarrow",
+        index=False,
+        compression="zstd"
+    )
     print("Parquet export complete.")
 
 
