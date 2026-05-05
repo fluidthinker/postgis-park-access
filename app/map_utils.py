@@ -91,8 +91,13 @@ def create_access_map(gdf: gpd.GeoDataFrame) -> folium.Map:
     """
     Create interactive Folium map of park access tiers.
     """
+    center = [
+        gdf.geometry.centroid.y.mean(),
+        gdf.geometry.centroid.x.mean(),
+    ]
+
     m = folium.Map(
-        location=MAP_CENTER,
+        location=center,
         zoom_start=MAP_ZOOM_START,
         tiles=MAP_TILES,
     )
@@ -111,12 +116,54 @@ def create_access_map(gdf: gpd.GeoDataFrame) -> folium.Map:
         tooltip=tooltip,
     ).add_to(m)
 
+    add_access_tier_legend(m)
     folium.LayerControl().add_to(m)
+
+
 
     return m
 
 
+def add_access_tier_legend(m: folium.Map) -> None:
+    """
+    Add a custom HTML legend for access tier colors.
+    """
+    legend_items = ""
 
+    for tier, color in ACCESS_TIER_COLORS.items():
+        legend_items += f"""
+        <div>
+            <span style="
+                background:{color};
+                width:14px;
+                height:14px;
+                display:inline-block;
+                margin-right:6px;
+                border:1px solid #555;
+            "></span>
+            {tier}
+        </div>
+        """
+
+    legend_html = f"""
+    <div style="
+        position: fixed;
+        bottom: 40px;
+        left: 40px;
+        z-index: 9999;
+        background-color: white;
+        padding: 10px 12px;
+        border: 1px solid #999;
+        border-radius: 6px;
+        font-size: 13px;
+        box-shadow: 2px 2px 6px rgba(0,0,0,0.25);
+    ">
+        <strong>Park Access Tier</strong><br>
+        {legend_items}
+    </div>
+    """
+
+    m.get_root().html.add_child(folium.Element(legend_html))
 
 def get_project_root() -> Path:
     """
