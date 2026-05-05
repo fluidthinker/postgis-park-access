@@ -16,6 +16,38 @@ ACCESS_TIER_COLORS = {
     "Low Access": "#f46d43",
     "Very Low Access": "#a50026",
 }
+# Map defaults
+MAP_CENTER = [43.07, -89.40]
+MAP_ZOOM_START = 10
+MAP_TILES = "cartodbpositron"
+
+DEFAULT_TRACT_STYLE = {
+    "color": "black",
+    "weight": 0.5,
+    "fillOpacity": 0.65,
+}
+
+DEFAULT_FILL_COLOR = "#cccccc"
+
+TOOLTIP_FIELDS = [
+    "geoid",
+    "access_tier",
+    "med_income",
+    "pct_renter",
+    "park_sqm_per_capita",
+    "nearest_park_distance_m",
+]
+
+TOOLTIP_ALIASES = [
+    "GEOID:",
+    "Access Tier:",
+    "Median Income:",
+    "% Renters:",
+    "Park sqm / Capita:",
+    "Nearest Park Distance (m):",
+]
+
+
 
 
 def load_access_geodata(parquet_path: Path) -> gpd.GeoDataFrame:
@@ -42,69 +74,32 @@ def load_access_geodata(parquet_path: Path) -> gpd.GeoDataFrame:
 
     return gdf
 
-
 def style_by_access_tier(feature: dict) -> dict:
     """
     Style a GeoJSON feature based on access tier.
-
-    Parameters
-    ----------
-    feature : dict
-        GeoJSON feature.
-
-    Returns
-    -------
-    dict
-        Folium style dictionary.
     """
     access_tier = feature["properties"].get("access_tier")
-    color = ACCESS_TIER_COLORS.get(access_tier, "#cccccc")
+    fill_color = ACCESS_TIER_COLORS.get(access_tier, DEFAULT_FILL_COLOR)
 
     return {
-        "fillColor": color,
-        "color": "black",
-        "weight": 0.5,
-        "fillOpacity": 0.65,
+        **DEFAULT_TRACT_STYLE,
+        "fillColor": fill_color,
     }
 
 
 def create_access_map(gdf: gpd.GeoDataFrame) -> folium.Map:
     """
     Create interactive Folium map of park access tiers.
-
-    Parameters
-    ----------
-    gdf : gpd.GeoDataFrame
-        Tract-level access GeoDataFrame.
-
-    Returns
-    -------
-    folium.Map
-        Interactive Folium map.
     """
     m = folium.Map(
-        location=[43.07, -89.40],
-        zoom_start=10,
-        tiles="cartodbpositron",
+        location=MAP_CENTER,
+        zoom_start=MAP_ZOOM_START,
+        tiles=MAP_TILES,
     )
 
     tooltip = folium.GeoJsonTooltip(
-        fields=[
-            "geoid",
-            "access_tier",
-            "med_income",
-            "pct_renter",
-            "park_sqm_per_capita",
-            "nearest_park_distance_m",
-        ],
-        aliases=[
-            "GEOID:",
-            "Access Tier:",
-            "Median Income:",
-            "% Renters:",
-            "Park sqm / Capita:",
-            "Nearest Park Distance (m):",
-        ],
+        fields=TOOLTIP_FIELDS,
+        aliases=TOOLTIP_ALIASES,
         localize=True,
         sticky=True,
     )
@@ -119,6 +114,8 @@ def create_access_map(gdf: gpd.GeoDataFrame) -> folium.Map:
     folium.LayerControl().add_to(m)
 
     return m
+
+
 
 
 def get_project_root() -> Path:
