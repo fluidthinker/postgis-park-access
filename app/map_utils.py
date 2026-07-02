@@ -151,17 +151,18 @@ def add_access_tier_legend(m: folium.Map) -> None:
         bottom: 40px;
         left: 40px;
         z-index: 9999;
-        background-color: white;
+        background-color: rgba(255, 255, 255, 0.95);
+        color: #000000;
         padding: 10px 12px;
         border: 1px solid #999;
         border-radius: 6px;
         font-size: 13px;
         box-shadow: 2px 2px 6px rgba(0,0,0,0.25);
     ">
-        <strong>Park Access Tier</strong><br>
+        <strong style="color:#000000;">Park Access Tier</strong><br>
         {legend_items}
-    </div>
-    """
+</div>
+"""
 
     m.get_root().html.add_child(folium.Element(legend_html))
 
