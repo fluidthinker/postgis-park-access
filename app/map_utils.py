@@ -132,18 +132,18 @@ def add_access_tier_legend(m: folium.Map) -> None:
 
     for tier, color in ACCESS_TIER_COLORS.items():
         legend_items += f"""
-        <div>
-            <span style="
-                background:{color};
-                width:14px;
-                height:14px;
-                display:inline-block;
-                margin-right:6px;
-                border:1px solid #555;
-            "></span>
-            {tier}
-        </div>
-        """
+            <div style="color:#000000;">
+                <span style="
+                    background:{color};
+                    width:14px;
+                    height:14px;
+                    display:inline-block;
+                    margin-right:6px;
+                    border:1px solid #555;
+                "></span>
+                {tier}
+            </div>
+            """
 
     legend_html = f"""
     <div style="
