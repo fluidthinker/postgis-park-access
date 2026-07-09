@@ -6,6 +6,12 @@
   <em>Interactive Streamlit dashboard exploring park accessibility across Dane County, Wisconsin.</em>
 </p>
 
+## Live Demo
+
+🚀 **Interactive Dashboard:** https://<your-streamlit-url>
+
+📂 **GitHub Repository:** https://github.com/fluidthinker/postgis-park-access
+
 ---
 
 ## Project Highlights
