@@ -77,7 +77,7 @@ These findings suggest that park access is spatially uneven, but not explained b
 
 ---
 
-## System Architecture
+## Application Architecture
 
 One of the main design goals was to separate spatial computation from dashboard presentation.
 
@@ -175,7 +175,7 @@ postgis-park-access/
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/fluidthinker/postgis-park-access.git
 
 cd postgis-park-access
 ```
