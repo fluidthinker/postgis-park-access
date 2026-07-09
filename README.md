@@ -325,6 +325,6 @@ Geospatial Data Engineer | GIS Developer | Spatial Data Science
 
 Portfolio: https://fluidthinker.github.io/
 
-LinkedIn: [[[LinkedIn](https://www.linkedin.com/in/chrisr-letsmakechange/)]]
+LinkedIn: https://www.linkedin.com/in/chrisr-letsmakechange/
 
 ---
