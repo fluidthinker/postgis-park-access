@@ -32,6 +32,7 @@ Park access is measured using two ideas:
 The project combines U.S. Census American Community Survey data with park polygons from OpenStreetMap. Spatial analysis was performed in PostGIS, results were exported to GeoParquet, and an interactive Streamlit dashboard was built to communicate the findings.
 
 The goal was not only to make a map, but to build a small geospatial data application with a clear pipeline, reusable outputs, and an interface that explains the results.
+The project demonstrates an end-to-end geospatial data engineering workflow, from spatial data processing through interactive visualization.
 
 ---
 
