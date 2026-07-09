@@ -1,82 +1,88 @@
 # Dane County Park Access Analysis
 
-![Dashboard Overview](docs/images/top_hero.jpg)
+<p align="center">
+  <img src="docs/images/top_hero.jpg" width="700">
+  <br>
+  <em>Interactive Streamlit dashboard exploring park accessibility across Dane County, Wisconsin.</em>
+</p>
 
 ---
 
 ## Project Highlights
 
-- Designed an end-to-end geospatial data pipeline using **PostGIS**, **DuckDB**, and **Streamlit**.
-- Combined **U.S. Census American Community Survey (ACS)** data with **OpenStreetMap** park polygons.
-- Calculated tract-level park accessibility metrics using spatial SQL.
-- Published results as an interactive dashboard for exploring park accessibility across Dane County, Wisconsin.
-- Organized the application using a modular architecture that separates data access, mapping, and user interface logic.
+- Built an end-to-end geospatial data pipeline from raw spatial and demographic data to an interactive dashboard.
+- Combined U.S. Census ACS data with OpenStreetMap park polygons.
+- Used PostGIS to calculate tract-level park accessibility metrics.
+- Exported final spatial analysis results to GeoParquet for portability.
+- Used DuckDB to query the exported analytical dataset without requiring a running database.
+- Built a Streamlit dashboard with an interactive Folium map, access tier filtering, and supporting charts.
+- Organized the application into separate modules for data access, mapping, and dashboard layout.
 
 ---
 
-# Project Overview
+## Project Overview
 
-Access to parks contributes to recreation, public health, and overall quality of life. However, park access is not distributed equally across all communities.
+Access to parks supports recreation, public health, and quality of life. This project explores whether some neighborhoods in Dane County, Wisconsin have much better park access than others — and whether those differences line up with median household income.
 
-This project explores how park accessibility varies across census tracts in Dane County, Wisconsin, and examines whether neighborhoods with different median household incomes experience different levels of park access.
+Park access is measured using two ideas:
 
-To support this analysis, I designed an end-to-end geospatial data pipeline that combines demographic data from the U.S. Census American Community Survey (ACS) with park polygons from OpenStreetMap. Spatial analysis was performed in PostGIS, analytical results were exported to GeoParquet, and an interactive Streamlit dashboard was developed to communicate the findings.
+- **Availability** — how much park space is available per resident.
+- **Proximity** — how far each census tract is from the nearest park.
 
-The project emphasizes not only spatial analysis, but also software architecture, reproducibility, and clear communication of analytical results.
+The project combines U.S. Census American Community Survey data with park polygons from OpenStreetMap. Spatial analysis was performed in PostGIS, results were exported to GeoParquet, and an interactive Streamlit dashboard was built to communicate the findings.
+
+The goal was not only to make a map, but to build a small geospatial data application with a clear pipeline, reusable outputs, and an interface that explains the results.
 
 ---
 
-# Research Questions
+## Research Questions
 
-This project explores the following questions:
+This project explores three main questions:
 
 - How does park accessibility vary across Dane County census tracts?
-- Do neighborhoods with lower median household incomes tend to have lower park accessibility?
-- What spatial patterns emerge when park accessibility is mapped across the county?
+- Do lower-income neighborhoods tend to have lower park accessibility?
+- What spatial patterns appear when park access is mapped across the county?
 
-Rather than attempting to build a predictive model, the goal is exploratory spatial analysis that helps visualize and understand geographic patterns in park accessibility.
-
----
-
-# Dashboard
-
-The final product is an interactive Streamlit dashboard that allows users to:
-
-- Explore park access by census tract
-- Filter census tracts by access tier
-- Compare park accessibility with median household income
-- Review supporting charts and summary statistics
-- Understand the methodology used to calculate park access
-
-The dashboard was intentionally designed to tell a story, guiding users from the research question to the supporting evidence while remaining approachable for non-technical audiences.
+This is an exploratory spatial analysis project rather than a predictive modeling project. The dashboard is meant to help users see patterns, compare access tiers, and understand where park access appears stronger or weaker.
 
 ---
 
-## Dashboard Overview
+## Interactive Dashboard
 
-![Dashboard Overview](docs/images/top_hero.jpg)
+The final Streamlit dashboard allows users to:
+
+- View park access by census tract on an interactive map.
+- Filter the map and charts by access tier.
+- Hover over census tracts to inspect local access and demographic values.
+- Compare median household income across park access tiers.
+- Review the methodology, limitations, and future enhancement ideas.
+
+<p align="center">
+  <img src="docs/images/charts.jpg" width="700">
+  <br>
+  <em>Supporting charts compare access tier counts and median household income by access tier.</em>
+</p>
 
 ---
 
-## Supporting Evidence
+## Key Findings
 
-![Supporting Charts](docs/images/charts.jpg)
+- Park access varies substantially across Dane County census tracts.
+- Lower-access neighborhoods tend to have lower median household incomes, but this is not a hard rule.
+- Income only tells part of the story; location and spatial context matter.
+- The relationship between income and distance to the nearest park is not strongly linear.
+
+These findings suggest that park access is spatially uneven, but not explained by income alone.
 
 ---
 
-## Methodology
+## System Architecture
 
-![Methodology](docs/images/methodology.jpg)
+One of the main design goals was to separate spatial computation from dashboard presentation.
 
----
+PostGIS was used for the heavier spatial analysis. Once the tract-level park access metrics were calculated, the results were exported to GeoParquet. The Streamlit app then reads the finished analytical dataset using DuckDB and GeoPandas.
 
-# System Architecture
-
-One of the primary design goals was to separate **computationally intensive spatial analysis** from the interactive dashboard.
-
-Instead of querying PostGIS every time a user loads the dashboard, all spatial analysis is performed once, exported to GeoParquet, and served through DuckDB.
-
-```
+```text
 Raw Data
     │
     ▼
@@ -90,36 +96,3 @@ DuckDB Analytical Queries
     │
     ▼
 Streamlit Dashboard
-```
-
-This architecture provides several advantages:
-
-- expensive spatial analysis runs only once
-- dashboard startup is fast
-- deployment is simpler because no database server is required
-- the analytical dataset becomes portable and reusable
-
----
-
-# Engineering Decisions
-
-Several architectural decisions were made to improve maintainability, portability, and performance.
-
-| Decision | Reason |
-|-----------|--------|
-| **PostGIS** | Perform computationally intensive spatial analysis |
-| **GeoParquet** | Store analysis results in a portable GIS format |
-| **DuckDB** | Query analytical data without requiring a running database |
-| **Streamlit** | Rapid development of an interactive analytical dashboard |
-| **queries.py** | Separate SQL logic from the user interface |
-| **map_utils.py** | Encapsulate Folium map creation and styling |
-| **Cached data loading** | Improve dashboard responsiveness |
-| **Modular project structure** | Simplify maintenance and future expansion |
-
-The result is an application in which each component has a clearly defined responsibility:
-
-- **PostGIS computes**
-- **DuckDB serves**
-- **Streamlit communicates**
-
-This separation greatly simplified deployment while keeping the dashboard responsive.
