@@ -356,7 +356,22 @@ def main() -> None:
             - Park quality, amenities, entrances, sidewalks, transit access, and barriers were not included.
             """
         )
+    # -------------------------
+    # Future enhancements
+    # -------------------------
 
+    with st.expander("Future Enhancements"):
+        st.markdown(
+            """
+            This dashboard focuses on exploratory spatial analysis. Possible extensions include:
+
+            - Add park boundary polygons as an optional map layer.
+            - Add a choropleth map showing median household income.
+            - Explore spatial clustering using Moran's I or Getis-Ord Gi* statistics.
+            - Evaluate additional socioeconomic variables such as age, race, or population density.
+            - Incorporate walkability or street-network travel distance instead of straight-line distance.
+            """
+        )
     # -------------------------
     # Data preview
     # -------------------------
