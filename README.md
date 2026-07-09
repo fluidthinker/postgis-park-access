@@ -96,3 +96,235 @@ DuckDB Analytical Queries
     │
     ▼
 Streamlit Dashboard
+
+---
+
+# Data Pipeline
+
+The project follows a simple but effective geospatial data engineering workflow.
+
+```text
+ACS Census Data          OpenStreetMap Parks
+        │                       │
+        └──────────────┬────────┘
+                       ▼
+                PostGIS Database
+                       │
+             Spatial SQL Analysis
+                       │
+        Area-weighted park metrics
+        Nearest park calculations
+        Access tier classification
+                       │
+                       ▼
+         GeoParquet Export (Portable Dataset)
+                       │
+                       ▼
+                  DuckDB Query Layer
+                       │
+                       ▼
+             Streamlit Interactive Dashboard
+```
+
+By separating data preparation from visualization, the dashboard remains lightweight and responsive while the computationally intensive spatial analysis only needs to be performed once.
+
+---
+
+# Repository Structure
+
+```text
+postgis-park-access/
+│
+├── app/
+│   ├── app.py
+│   ├── queries.py
+│   └── map_utils.py
+│
+├── scripts/
+│   ├── ingestion/
+│   └── eda/
+│
+├── data/
+│   ├── raw/
+│   └── processed/
+│
+├── docs/
+│   └── images/
+│
+├── outputs/
+│
+├── environment.yml
+└── README.md
+```
+
+### Folder Overview
+
+| Folder | Purpose |
+|---------|---------|
+| **app/** | Streamlit application and supporting modules |
+| **scripts/** | Data ingestion, spatial analysis, and exploratory analysis |
+| **data/** | Raw and processed datasets |
+| **docs/images/** | Images used by the README |
+| **outputs/** | Generated maps and exported outputs |
+
+---
+
+# Running the Project
+
+## 1. Clone the repository
+
+```bash
+git clone <repository-url>
+
+cd postgis-park-access
+```
+
+---
+
+## 2. Create the environment
+
+```bash
+micromamba create -f environment.yml
+
+micromamba activate postgis-park-access
+```
+
+---
+
+## 3. Launch the dashboard
+
+```bash
+streamlit run app/app.py
+```
+
+The dashboard opens automatically in your browser.
+
+---
+
+# Dashboard Components
+
+The application consists of three primary modules.
+
+| Module | Responsibility |
+|----------|----------------|
+| **app.py** | Streamlit user interface and dashboard layout |
+| **queries.py** | DuckDB queries and analytical data access |
+| **map_utils.py** | Folium map creation, styling, and legends |
+
+Separating these responsibilities keeps the code easier to maintain and test.
+
+---
+
+# Methodology
+
+<p align="center">
+  <img src="docs/images/methodology.jpg" width="700">
+  <br>
+  <em>The dashboard documents the methodology used to calculate park accessibility and summarizes results by access tier.</em>
+</p>
+
+Park accessibility was evaluated using two complementary measures:
+
+- **Availability** – total park area available per resident.
+- **Proximity** – distance from each census tract to its nearest park.
+
+These measures were combined to classify census tracts into four access tiers:
+
+- High Access
+- Moderate Access
+- Low Access
+- Very Low Access
+
+The dashboard also documents project limitations and provides transparency about the analytical approach.
+
+---
+
+# Future Enhancements
+
+Potential future improvements include:
+
+- Add park polygons as an optional map layer.
+- Add a median household income choropleth.
+- Explore spatial clustering using Moran's I or Getis-Ord Gi* statistics.
+- Investigate additional socioeconomic variables.
+- Compare straight-line distance with network-based walking distance.
+- Deploy the dashboard using Google Cloud Run.
+
+---
+
+# Lessons Learned
+
+This project reinforced several important software engineering and geospatial analysis principles.
+
+### Separate computation from presentation
+
+Performing the spatial analysis once in PostGIS and exporting the results to GeoParquet simplified the dashboard and improved performance.
+
+### Build modular applications
+
+Separating SQL queries, mapping logic, and the Streamlit interface made the project easier to understand and maintain.
+
+### Design around the user
+
+The dashboard became much stronger after shifting the focus from displaying maps and charts to communicating a clear analytical story.
+
+### Documentation is part of software engineering
+
+Returning to the project after several months reinforced the value of good documentation, architectural diagrams, and leaving clear "breadcrumbs" for future maintenance.
+
+---
+
+# Technologies Used
+
+### Geospatial
+
+- PostGIS
+- GeoPandas
+- OpenStreetMap
+- OSMnx
+- GeoParquet
+
+### Data Engineering
+
+- DuckDB
+- PostgreSQL
+- Pandas
+
+### Dashboard
+
+- Streamlit
+- Folium
+- Altair
+
+### Development
+
+- Python
+- Micromamba
+- Docker
+- Git
+- Visual Studio Code
+
+---
+
+# Acknowledgements
+
+This project uses publicly available data from:
+
+- U.S. Census Bureau — American Community Survey (ACS)
+- OpenStreetMap contributors
+
+---
+
+## Author
+
+**Chris Randle**
+
+Master of Environmental Science
+
+Geospatial Data Engineer | GIS Developer | Spatial Data Science
+
+Portfolio: https://fluidthinker.github.io/
+
+LinkedIn: [[[LinkedIn](https://www.linkedin.com/in/chrisr-letsmakechange/)]]
+
+---
