@@ -96,10 +96,10 @@ DuckDB Analytical Queries
     │
     ▼
 Streamlit Dashboard
-
+```
 ---
 
-# Data Pipeline
+## Data Pipeline
 
 The project follows a simple but effective geospatial data engineering workflow.
 
@@ -130,7 +130,7 @@ By separating data preparation from visualization, the dashboard remains lightwe
 
 ---
 
-# Repository Structure
+## Repository Structure
 
 ```text
 postgis-park-access/
@@ -169,9 +169,9 @@ postgis-park-access/
 
 ---
 
-# Running the Project
+## Running the Project
 
-## 1. Clone the repository
+### 1. Clone the repository
 
 ```bash
 git clone <repository-url>
@@ -181,7 +181,7 @@ cd postgis-park-access
 
 ---
 
-## 2. Create the environment
+### 2. Create the environment
 
 ```bash
 micromamba create -f environment.yml
@@ -191,7 +191,7 @@ micromamba activate postgis-park-access
 
 ---
 
-## 3. Launch the dashboard
+### 3. Launch the dashboard
 
 ```bash
 streamlit run app/app.py
@@ -201,7 +201,7 @@ The dashboard opens automatically in your browser.
 
 ---
 
-# Dashboard Components
+## Dashboard Components
 
 The application consists of three primary modules.
 
@@ -215,10 +215,10 @@ Separating these responsibilities keeps the code easier to maintain and test.
 
 ---
 
-# Methodology
+## Methodology
 
-<p align="center">
-  <img src="docs/images/methodology.jpg" width="700">
+<p align="left">
+  <img src="docs/images/methodology.jpg" width="1000">
   <br>
   <em>The dashboard documents the methodology used to calculate park accessibility and summarizes results by access tier.</em>
 </p>
@@ -239,7 +239,7 @@ The dashboard also documents project limitations and provides transparency about
 
 ---
 
-# Future Enhancements
+## Future Enhancements
 
 Potential future improvements include:
 
@@ -252,7 +252,7 @@ Potential future improvements include:
 
 ---
 
-# Lessons Learned
+## Lessons Learned
 
 This project reinforced several important software engineering and geospatial analysis principles.
 
@@ -274,7 +274,7 @@ Returning to the project after several months reinforced the value of good docum
 
 ---
 
-# Technologies Used
+## Technologies Used
 
 ### Geospatial
 
@@ -306,7 +306,7 @@ Returning to the project after several months reinforced the value of good docum
 
 ---
 
-# Acknowledgements
+## Acknowledgements
 
 This project uses publicly available data from:
 
