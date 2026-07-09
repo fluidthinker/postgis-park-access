@@ -177,6 +177,8 @@ postgis-park-access/
 ```bash
 git clone https://github.com/fluidthinker/postgis-park-access.git
 
+cd postgis-park-accessgit clone https://github.com/fluidthinker/postgis-park-access.git
+
 cd postgis-park-access
 ```
 
@@ -324,8 +326,8 @@ Master of Environmental Science
 
 Geospatial Data Engineer | GIS Developer | Spatial Data Science
 
-Portfolio: https://fluidthinker.github.io/
-
-LinkedIn: https://www.linkedin.com/in/chrisr-letsmakechange/
+- **Portfolio:** https://fluidthinker.github.io/
+- **LinkedIn:** https://www.linkedin.com/in/chrisr-letsmakechange/
+- **GitHub:** https://github.com/fluidthinker
 
 ---
